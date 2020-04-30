@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roslyn-Analyzer", "Roslyn-Analyzer\Roslyn-Analyzer.csproj", "{F617FED7-747C-46F4-88F9-C8EC16AB2F72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F617FED7-747C-46F4-88F9-C8EC16AB2F72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F617FED7-747C-46F4-88F9-C8EC16AB2F72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F617FED7-747C-46F4-88F9-C8EC16AB2F72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F617FED7-747C-46F4-88F9-C8EC16AB2F72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B520412D-FB71-4CF9-8B40-1C4B6B3E99D1}
+	EndGlobalSection
+EndGlobal
