@@ -14,13 +14,6 @@ namespace RoslynAnalyzer
 {
     public static class RolsynExtensions
     {
-        public static Solution CurrentSolution;
-        public static Solution GetSolution(this SyntaxNodeAnalysisContext context)
-        {
-            return CurrentSolution;
-            var workspace = context.Options.GetPrivatePropertyValue<object>("Workspace");
-            return workspace.GetPrivatePropertyValue<Solution>("CurrentSolution");
-        }
 
         public static T GetPrivatePropertyValue<T>(this object obj, string propName)
         {

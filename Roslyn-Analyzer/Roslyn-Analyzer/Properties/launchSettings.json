@@ -2,7 +2,7 @@
   "profiles": {
     "Roslyn-Analyzer": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\qiudesuo\\Downloads\\RoslynTest\\RoslynTest.sln"
+      "commandLineArgs": "E:\\mono\\test_code\\RoslynTest\\RoslynTest.sln"
     }
   }
 }

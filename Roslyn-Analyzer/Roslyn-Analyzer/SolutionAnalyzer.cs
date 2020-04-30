@@ -7,19 +7,19 @@ using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RoslynAnalyzer.CLI
 {
     public class SolutionAnalyzer
     {
-
-        public static ISymbol fieldSymbol; // store the filed by AnalyzeProject
+        
         public async Task LoadAnadAnalyzeProject(FileInfo projectFile, AnalyzerReport report) //TODO: Add async suffix
         {
             var workspace = MSBuildWorkspace.Create();
             workspace.WorkspaceFailed += (o, e) =>
             {
-                int a = 1;
                 Console.WriteLine(e.Diagnostic.Message);
             };
             var solution = await workspace.OpenSolutionAsync(projectFile.FullName);
@@ -27,8 +27,40 @@ namespace RoslynAnalyzer.CLI
             var analyzers = this.GetAnalyzers();
 
             await AnalyzeProject(solution, analyzers, report);
-            var referencedSymbols = SymbolFinder.FindReferencesAsync(fieldSymbol, solution).Result; //the referenceSymbols is empty
-            int b = 1;
+
+            foreach (Project project in solution.Projects)
+            {
+                foreach (var document in project.Documents)
+                {
+                    SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
+                    var syntaxRoot = document.GetSyntaxRootAsync().Result;
+                    var readonlyNodes = syntaxRoot.DescendantNodes().OfType<FieldDeclarationSyntax>();
+                    foreach (var readonlyNode in readonlyNodes)
+                    {
+                        foreach (var variable in readonlyNode.Declaration.Variables)
+                        {
+                            var fieldSymbol = semanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
+                            if (fieldSymbol.IsReadOnly && fieldSymbol.IsStatic)
+                            {
+                                var referencedSymbols = SymbolFinder.FindReferencesAsync(fieldSymbol, solution).Result;
+                                foreach (var ref1 in referencedSymbols)
+                                {
+                                    foreach (var location in ref1.Locations)
+                                    {
+
+                                    }
+                                }
+                            }
+                            // Do stuff with the symbol here
+                        }
+                    }
+
+
+                }
+            }
+            
+                // var referencedSymbols = SymbolFinder.FindReferencesAsync(fieldSymbol, solution).Result; //the referenceSymbols is empty
+
         }
 
         private ImmutableArray<DiagnosticAnalyzer> GetAnalyzers()
@@ -54,7 +86,6 @@ namespace RoslynAnalyzer.CLI
 
         private async Task AnalyzeProject(Solution solution, ImmutableArray<DiagnosticAnalyzer> analyzers, AnalyzerReport report)
         {
-            RolsynExtensions.CurrentSolution = solution;
             foreach (Project project in solution.Projects)
             {
                 var compilation = await project.GetCompilationAsync();

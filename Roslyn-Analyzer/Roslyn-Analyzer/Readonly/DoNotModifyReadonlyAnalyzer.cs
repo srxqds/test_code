@@ -42,6 +42,7 @@ namespace RoslynAnalyzer.Readonly
 
         private static void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
         {
+            
             ElementAccessExpressionSyntax elementAccessExpressionSyntax = context.Node as ElementAccessExpressionSyntax;
             if(elementAccessExpressionSyntax != null)
             {
@@ -49,21 +50,17 @@ namespace RoslynAnalyzer.Readonly
                 if (expressionSymbol.Kind == SymbolKind.Parameter)
                 {
                     IParameterSymbol parameter = expressionSymbol as IParameterSymbol;
-                    int a = 1;
                 }
                 else if (expressionSymbol.Kind == SymbolKind.Method)
                 {
                     IMethodSymbol method = expressionSymbol as IMethodSymbol;
-                    int a = 1;
                 }
                 else if (expressionSymbol.Kind == SymbolKind.Local)
                 {
                     ILocalSymbol local = expressionSymbol as ILocalSymbol;
-                    int a = 1;
                 }
                 else if (expressionSymbol.Kind == SymbolKind.Field && (expressionSymbol as IFieldSymbol).IsReadOnly)
                 {
-                    SolutionAnalyzer.fieldSymbol = expressionSymbol;
                     var diagnostic = Diagnostic.Create(DiagnosticDescriptors.DoNotModifyReadonlyArray, elementAccessExpressionSyntax.GetLocation());
                     context.ReportDiagnostic(diagnostic);
                 }
