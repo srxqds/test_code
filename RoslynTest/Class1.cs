@@ -31,6 +31,7 @@ namespace RoslynTest
 
         public static int[] GetIntArray()
         {
+            int temp = 1;
             return IntArray;
         }
 

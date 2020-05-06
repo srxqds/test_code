@@ -2,16 +2,31 @@
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.MSBuild;
-using RoslynAnalyzer.Readonly;
 using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RoslynAnalyzer.CLI
 {
+
+    public abstract class DiagnosticAnalyzerWithSolution : DiagnosticAnalyzer
+    {
+        public Solution solution { get; private set; }
+
+        public DiagnosticAnalyzerWithSolution(Solution solution) : base()
+        {
+            this.solution = solution;
+        }
+
+        public SyntaxNode GetSyntaxNodeFromLocation(Location location)
+        {
+            return RolsynExtensions.GetSyntaxNodeFromLocation(this.solution, location);
+        }
+        
+        
+    }
     public class SolutionAnalyzer
     {
         
@@ -24,62 +39,32 @@ namespace RoslynAnalyzer.CLI
             };
             var solution = await workspace.OpenSolutionAsync(projectFile.FullName);
 
-            var analyzers = this.GetAnalyzers();
+            var analyzers = this.GetAnalyzers(solution);
 
             await AnalyzeProject(solution, analyzers, report);
-
-            foreach (Project project in solution.Projects)
-            {
-                foreach (var document in project.Documents)
-                {
-                    SemanticModel semanticModel = document.GetSemanticModelAsync().Result;
-                    var syntaxRoot = document.GetSyntaxRootAsync().Result;
-                    var readonlyNodes = syntaxRoot.DescendantNodes().OfType<FieldDeclarationSyntax>();
-                    foreach (var readonlyNode in readonlyNodes)
-                    {
-                        foreach (var variable in readonlyNode.Declaration.Variables)
-                        {
-                            var fieldSymbol = semanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
-                            if (fieldSymbol.IsReadOnly && fieldSymbol.IsStatic)
-                            {
-                                var referencedSymbols = SymbolFinder.FindReferencesAsync(fieldSymbol, solution).Result;
-                                foreach (var ref1 in referencedSymbols)
-                                {
-                                    foreach (var location in ref1.Locations)
-                                    {
-
-                                    }
-                                }
-                            }
-                            // Do stuff with the symbol here
-                        }
-                    }
-
-
-                }
-            }
-            
-                // var referencedSymbols = SymbolFinder.FindReferencesAsync(fieldSymbol, solution).Result; //the referenceSymbols is empty
-
         }
 
-        private ImmutableArray<DiagnosticAnalyzer> GetAnalyzers()
+        private ImmutableArray<DiagnosticAnalyzer> GetAnalyzers(Solution solution)
         {
             var listBuilder = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
 
-            var assembly = typeof(DoNotModifyReadonlyAnalyzer).Assembly;
+            var assembly = typeof(DiagnosticAnalyzerWithSolution).Assembly;
             var allTypes = assembly.DefinedTypes;
 
             foreach (var type in allTypes)
             {
-                if (type.BaseType == typeof(DiagnosticAnalyzer))
+                if (type == typeof(DiagnosticAnalyzerWithSolution))
+                    continue;
+                else if (type.BaseType == typeof(DiagnosticAnalyzerWithSolution))
                 {
-                    var instance = Activator.CreateInstance(type) as DiagnosticAnalyzer;
-                    listBuilder.Add(instance);
+                    listBuilder.Add(Activator.CreateInstance(type, solution) as DiagnosticAnalyzer);
+                }
+                else if (type.BaseType == typeof(DiagnosticAnalyzer))
+                {
+                    listBuilder.Add(Activator.CreateInstance(type) as DiagnosticAnalyzer);
                 }
             }
-
-
+            
             var analyzers = listBuilder.ToImmutable();
             return analyzers;
         }

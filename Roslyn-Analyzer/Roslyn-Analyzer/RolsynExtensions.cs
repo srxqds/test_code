@@ -1,19 +1,102 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.FindSymbols;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace RoslynAnalyzer
 {
     public static class RolsynExtensions
     {
+        public static DataFlowAnalysis AnalyzeDataFlow(this SemanticModel semanticModel, MethodDeclarationSyntax methodDeclarationSyntax)
+        {
+            return semanticModel.AnalyzeDataFlow(methodDeclarationSyntax.Body);
+        }
+
+        public static void IterateArgumentSyntax(ArgumentListSyntax argumentListSyntax, Action<ArgumentListSyntax, ArgumentSyntax> callback)
+        {
+            foreach(ArgumentSyntax argumentSyntax in argumentListSyntax.Arguments)
+            {
+                callback(argumentListSyntax, argumentSyntax);
+            }
+        }
+        public static void IterateReferenceSymbols(IEnumerable<ReferencedSymbol> referencedSymbols, Action<ISymbol, ReferenceLocation> callback)
+        {
+            if (referencedSymbols != null)
+            {
+                foreach (ReferencedSymbol referencedSymbol in referencedSymbols)
+                {
+                    foreach (ReferenceLocation location in referencedSymbol.Locations)
+                    {
+                        callback(referencedSymbol.Definition, location);
+                    }
+                }
+            }
+        }
+
+        public static ISymbol ConvertAnalyzerToWorkspace(ISymbol symbol, Solution solution)
+        {
+            if (symbol == null)
+                return null;
+            return null;
+        }
+
+        public static SyntaxNode GetSyntaxNodeFromLocation(Project project, Location location)
+        {
+            SyntaxNode result = null;
+            foreach (var document in project.Documents)
+            {
+                if (document.FilePath == location.SourceTree.FilePath)
+                {
+                    var syntaxRoot = document.GetSyntaxRootAsync().Result;
+                    result = syntaxRoot.FindNode(location.SourceSpan);
+                    break;
+                }
+            }
+            return result;
+        }
+
+        public static SyntaxNode GetSyntaxNodeFromLocation(Solution solution, Location location)
+        {
+            SyntaxNode result = null;
+            foreach (Project project in solution.Projects)
+            {
+                result = GetSyntaxNodeFromLocation(project, location);
+                if (result != null)
+                    break;
+            }
+            return result;
+        }
+
+        public static SemanticModel GetSemanticModelFromLocation(Solution solution, Location location)
+        {
+            SemanticModel result = null;
+            foreach (Project project in solution.Projects)
+            {
+                foreach (var document in project.Documents)
+                {
+                    if (document.FilePath == location.SourceTree.FilePath)
+                    {
+                        result = document.GetSemanticModelAsync().Result;
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static ISymbol GetISymbolFromSyntaxNode(Solution solution, SyntaxNode syntaxNode)
+        {
+            SemanticModel semanticModel = GetSemanticModelFromLocation(solution, syntaxNode.GetLocation());
+            if (semanticModel == null)
+                return null;
+            return semanticModel.GetSymbolInfo(syntaxNode).Symbol;
+        }
 
         public static T GetPrivatePropertyValue<T>(this object obj, string propName)
         {

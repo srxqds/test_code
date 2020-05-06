@@ -87,19 +87,19 @@ namespace RoslynAnalyzer.CLI
                 Console.WriteLine($"    Version: {visualStudioInstances[i].Version}");
                 Console.WriteLine($"    MSBuild Path: {visualStudioInstances[i].MSBuildPath}");
             }
-
+            // 默认选择第一个，vs2019有问题
             return visualStudioInstances[0];
-            while (true)
-            {
-                var userResponse = Console.ReadLine();
-                if (int.TryParse(userResponse, out int instanceNumber) &&
-                    instanceNumber > 0 &&
-                    instanceNumber <= visualStudioInstances.Length)
-                {
-                    return visualStudioInstances[instanceNumber - 1];
-                }
-                Console.WriteLine("Input not accepted, try again.");
-            }
+            //while (true)
+            //{
+            //    var userResponse = Console.ReadLine();
+            //    if (int.TryParse(userResponse, out int instanceNumber) &&
+            //        instanceNumber > 0 &&
+            //        instanceNumber <= visualStudioInstances.Length)
+            //    {
+            //        return visualStudioInstances[instanceNumber - 1];
+            //    }
+            //    Console.WriteLine("Input not accepted, try again.");
+            //}
         }
 
     }
